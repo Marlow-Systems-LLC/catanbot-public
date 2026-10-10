@@ -1,0 +1,96 @@
+{
+ "weights": {
+  "turns": 3.0,
+  "vp_frac": 2.5,
+  "income": 1.0,
+  "diversity": 0.5,
+  "cards": 0.25,
+  "longest_road": 0.3,
+  "largest_army": 0.3,
+  "ck_improve": 0.6,
+  "knights": 0.25,
+  "expansion": 0.5,
+  "harbors": 0.2,
+  "discard_risk": -0.4,
+  "hidden": 0.4
+ },
+ "params": {
+  "cards_per_vp": 4.5,
+  "ck_cards_per_vp": 5.5,
+  "temperature": 1.0
+ },
+ "mode_weights": {
+  "great_canal": {
+   "largest_army": 0.0,
+   "harbors": 0.38966533429123706,
+   "expansion": 0.6303040139584616,
+   "cards": 0.1471397101644297,
+   "vp_frac": 0.991789740534284,
+   "ck_improve": 3.641936955390064,
+   "knights": 0.5050916277782965,
+   "diversity": -0.8519648535515878,
+   "turns": -1.6733207913195383,
+   "longest_road": -0.7659938880474587,
+   "hidden": 0.0,
+   "discard_risk": 4.9815292099956805,
+   "income": -0.4567188554344402
+  }
+ },
+ "opponents": {
+  "P1": {
+   "games": 360,
+   "wins": 75,
+   "trade_offers_seen": 0,
+   "trade_accepts": 0,
+   "avg_cards": 0.0,
+   "samples": 0
+  },
+  "P2": {
+   "games": 360,
+   "wins": 87,
+   "trade_offers_seen": 0,
+   "trade_accepts": 0,
+   "avg_cards": 0.0,
+   "samples": 0
+  },
+  "P3": {
+   "games": 360,
+   "wins": 114,
+   "trade_offers_seen": 0,
+   "trade_accepts": 0,
+   "avg_cards": 0.0,
+   "samples": 0
+  },
+  "P0": {
+   "games": 360,
+   "wins": 84,
+   "trade_offers_seen": 0,
+   "trade_accepts": 0,
+   "avg_cards": 0.0,
+   "samples": 0
+  }
+ },
+ "games": 360,
+ "brain": {
+  "wall_late": false,
+  "set_for_grain": true,
+  "knight_always": 0.003,
+  "defender_vp": 0.01,
+  "spend_grain": 0.03,
+  "gold_route": 0.01,
+  "limit_lookahead": true,
+  "city_wall_slot": 0.01,
+  "spend_exposed": 0.004,
+  "improve_ladder": 0.02,
+  "road_cuts": true,
+  "knight_bounce": false,
+  "barb_sabotage": false,
+  "displace": false,
+  "situational": false,
+  "grain_gate": true,
+  "wall_boost": 2.0,
+  "grain_first": true,
+  "spend_turn": true,
+  "spend_need_cap": 2
+ }
+}

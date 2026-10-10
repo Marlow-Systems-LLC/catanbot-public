@@ -1,0 +1,34 @@
+# docker compose run --rm tests              run the test suite
+# docker compose run --rm sim scripts/selfplay.py 100   any script in scripts/ (battle.py, train_loop.py, ...)
+# docker compose up -d api                    read-only API on http://localhost:8940
+services:
+  tests:
+    build: .
+    image: catanbot
+    command: ["python", "-m", "pytest", "-q"]
+
+  sim:
+    image: catanbot
+    build: .
+    entrypoint: ["python", "-u"]
+    command: ["scripts/selfplay.py", "20"]
+    volumes:
+      - ./data:/app/data            # models, self-play and training output stay on the host
+
+  api:
+    image: catanbot
+    build: .
+    command: ["python", "-m", "catanbot.api"]
+    environment:
+      CATANBOT_API_KEY_FILE: /run/secrets/catanbot_api_key
+      CATANBOT_API_PORT: "8940"
+    secrets:
+      - catanbot_api_key
+    volumes:
+      - ./data:/app/data:ro
+    ports:
+      - "127.0.0.1:8940:8940"
+
+secrets:
+  catanbot_api_key:
+    file: ./secrets/api.key

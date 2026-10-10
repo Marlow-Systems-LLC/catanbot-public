@@ -1,0 +1,23 @@
+{
+ "mode": "great_canal",
+ "games": 6,
+ "avg_turns": 214.7,
+ "no_winner": 0,
+ "winner_pred_first50": 71.8,
+ "winner_pred_last50": 71.8,
+ "mode_weights": {
+  "turns": -1.1965639636418515,
+  "vp_frac": 0.0800665103106773,
+  "income": -0.24250018285263994,
+  "diversity": 0.1413201317190154,
+  "cards": -0.2053106412594316,
+  "longest_road": -0.9537559392754683,
+  "largest_army": 0.0,
+  "ck_improve": 0.028095700012408298,
+  "knights": 0.1778779188393908,
+  "expansion": 0.11921979594842348,
+  "harbors": 0.0788659252067559,
+  "discard_risk": -0.02284112009483435,
+  "hidden": 0.0
+ }
+}

@@ -1,0 +1,154 @@
+{
+ "_frame": "1372x888 screenshot frame (game window at about 0,29-1220,840); confirmed 2026-10-02 in Greater Catan",
+ "setup_confirm": [
+  610,
+  698
+ ],
+ "dice_or_end_turn": [
+  1175,
+  800
+ ],
+ "_dice_note": "same button: dice icon before the roll, circular-arrow icon = end turn after",
+ "trade_open": [
+  1097,
+  800
+ ],
+ "trade_order": [
+  "lumber",
+  "brick",
+  "wool",
+  "grain",
+  "ore",
+  "cloth",
+  "coin",
+  "paper"
+ ],
+ "trade_want_row": {
+  "y": 592,
+  "x": [
+   347,
+   425,
+   503,
+   582,
+   660,
+   738,
+   817,
+   895
+  ]
+ },
+ "trade_give_row": {
+  "y": 717,
+  "x": [
+   347,
+   425,
+   503,
+   582,
+   660,
+   738,
+   817,
+   895
+  ]
+ },
+ "trade_ok": [
+  892,
+  812
+ ],
+ "trade_cancel": [
+  842,
+  812
+ ],
+ "trade_bank": [
+  642,
+  812
+ ],
+ "trade_player_select": [
+  592,
+  812
+ ],
+ "trade_texts": {
+  "empty": "Create an offer for all other players.",
+  "ready": "You can now send your trade offer with the OK button.",
+  "declined": "No player wants to trade"
+ },
+ "info_button": [
+  33,
+  655
+ ],
+ "trade_after_decline": "first click after 'No player wants to trade' resets the offer to empty; rebuild it fully before OK",
+ "barbarian_label": "left of board near (300,330): 'Barbarian strength' / 'Active knights' numbers",
+ "offer_in_decline": [
+  1053,
+  600
+ ],
+ "offer_in_counter": [
+  1113,
+  600
+ ],
+ "offer_in_accept": [
+  1175,
+  600
+ ],
+ "_offer_in_note": "right-side panel 'Offer from <name>': rows '+N card' (we get) then '-N card' (we give) at x~1180, y~473/535 for a 1-for-1; buttons X/bag(counter)/check. Calibrated gc_trade_offer_in.jpg 2026-10-02. Card icons not yet classifiable (wool hue 25 vs grain 21).",
+ "progress_hand": [
+  560,
+  690,
+  1250,
+  888
+ ],
+ "progress_play": [
+  686,
+  600
+ ],
+ "progress_discard": [
+  686,
+  660
+ ],
+ "progress_live": true,
+ "_progress_UNCONFIRMED": "2026-10-03 full screen: a held card shows as a small card right of the hand bar, title at frame (882,716) = reference (838,769) 'cb'. Clicking it enlarges it (title ~(882,519)). The Play button on our own turn is found by OCR (not yet seen); every step saves data/popups/*_progress_*.png.",
+ "chat_open": [
+  33,
+  488
+ ],
+ "chat_close": [
+  33,
+  488
+ ],
+ "chat_input": [
+  190,
+  776
+ ],
+ "chat_send": null,
+ "chat_lines_region": [
+  62,
+  440,
+  338,
+  765
+ ],
+ "_chat_note": "confirmed live 2026-10-02 (1372x888 frame): chat_open/chat_close is one toggle icon; panel x62-338 y420-792; no send button, press Return after typing in chat_input. Lines look like '[Game] [name]: text' and may wrap over 2 OCR lines.",
+ "quit_gear": [
+  32,
+  774
+ ],
+ "quit_check": [
+  198,
+  754
+ ],
+ "improve_chart_trade": [
+  682,
+  775
+ ],
+ "improve_chart_politics": [
+  752,
+  775
+ ],
+ "improve_chart_science": [
+  822,
+  775
+ ],
+ "place_cancel": [
+  610,
+  699
+ ],
+ "_place_cancel_note": "red X under the board on 'Select position for ...' prompts. Laptop-frame coords like every key (anchor cb, same spot as setup_confirm); live 2026-10-03 game 6: the full-screen value (654,646) stored here got shifted twice to (698,593) and missed for 8 min",
+ "_progress_hand_note": "2026-10-03: held card titles sit at y~715 (above the old y0=740), x~740-1010"
+}

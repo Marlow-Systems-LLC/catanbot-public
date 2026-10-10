@@ -1,0 +1,1 @@
+{"games": 32, "no_winner": 0, "avg_turns": 130, "avg_secs": 31.1, "city_lost_first_attack_pct": 27.3, "seats_ending_cityless_pct": 13.3, "disruptions_per_game": 7.1, "avg_recover_turns": 22.3, "avg_chips": 0.39, "win_by_seat": [10, 6, 7, 9]}

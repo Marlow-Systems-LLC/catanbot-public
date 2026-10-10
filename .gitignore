@@ -1,0 +1,40 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+
+# runtime frames + live state (2026-10-04, v0.2): kept on the server, not in git
+data/unread/
+data/probe/
+data/popups/
+data/discard/
+data/trade_wait/
+data/offers/
+data/lobby/
+data/leave/
+data/loops/
+data/snaps/
+data/games/
+data/archive/
+data/STOP
+data/*.flag
+data/ALERT*
+data/api.log
+data/feed.json
+data/runner_stage.log
+data/setup_log/
+# from the laptop .gitignore (merge, 2026-10-04)
+data/ref/
+data/train/
+data/pretrain/shards/
+data/live_*.log
+data/runner.pid
+
+# end-of-game screenshots (shared to the group; kept on the server)
+data/endgame/
+data/live_glog.json
+data/game_logs/
+
+# docker compose API token (make one with: mkdir -p secrets && python3 -c "import secrets; print(secrets.token_urlsafe(32))" > secrets/api.key)
+secrets/

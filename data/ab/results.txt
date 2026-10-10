@@ -1,0 +1,9 @@
+all1004: {"flag": "all1004", "mode": "great_canal", "games": 240, "wins": 40, "win_rate": 0.167, "fair": 0.25, "no_winner": 0, "avg_turns": 103.2}
+no_knight_always: {"flag": "no_knight_always", "mode": "great_canal", "games": 240, "wins": 68, "win_rate": 0.283, "fair": 0.25, "no_winner": 0, "avg_turns": 114.2}
+ladder1004: {"flag": "ladder1004", "mode": "great_canal", "games": 240, "wins": 66, "win_rate": 0.275, "fair": 0.25, "no_winner": 0, "avg_turns": 114.2}
+bounce1004: {"flag": "bounce1004", "mode": "great_canal", "games": 240, "wins": 59, "win_rate": 0.246, "fair": 0.25, "no_winner": 0, "avg_turns": 113.6}
+no_defender_vp: {"flag": "no_defender_vp", "mode": "great_canal", "games": 240, "wins": 70, "win_rate": 0.292, "fair": 0.25, "no_winner": 0, "avg_turns": 113.1}
+no_spend_grain: {"flag": "no_spend_grain", "mode": "great_canal", "games": 240, "wins": 62, "win_rate": 0.258, "fair": 0.25, "no_winner": 0, "avg_turns": 103.2}
+no_gold_route: {"flag": "no_gold_route", "mode": "great_canal", "games": 240, "wins": 68, "win_rate": 0.283, "fair": 0.25, "no_winner": 0, "avg_turns": 103.3}
+no_limit_lookahead: {"flag": "no_limit_lookahead", "mode": "great_canal", "games": 240, "wins": 60, "win_rate": 0.25, "fair": 0.25, "no_winner": 0, "avg_turns": 114.3}
+DONE

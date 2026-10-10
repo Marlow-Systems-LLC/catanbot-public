@@ -1,0 +1,4 @@
+{"seed": 1003, "winner": "P0", "turns": 120, "secs": 24.9, "vps": [18, 7, 8, 7], "cities": [3, 0, 1, 1], "chips": [0, 0, 0, 0], "attacks": 9, "lost_first": ["P3"], "lost": [[0, "P3"], [2, "P1"], [2, "P2"]]}
+{"seed": 1002, "winner": "P2", "turns": 214, "secs": 41.6, "vps": [12, 9, 19, 17], "cities": [4, 0, 6, 6], "chips": [0, 0, 0, 0], "attacks": 14, "lost_first": ["P1", "P2"], "lost": [[0, "P1"], [0, "P2"], [10, "P0"], [10, "P2"], [10, "P3"]]}
+{"seed": 1000, "winner": "P3", "turns": 163, "secs": 41.8, "vps": [17, 11, 10, 18], "cities": [4, 2, 2, 6], "chips": [0, 0, 0, 0], "attacks": 11, "lost_first": ["P1", "P2", "P3"], "lost": [[0, "P1"], [0, "P2"], [0, "P3"]]}
+{"seed": 1001, "winner": "P3", "turns": 215, "secs": 48.8, "vps": [10, 13, 17, 18], "cities": [0, 3, 6, 5], "chips": [0, 0, 0, 0], "attacks": 14, "lost_first": ["P1", "P2"], "lost": [[0, "P1"], [0, "P2"], [1, "P3"], [3, "P0"], [7, "P1"]]}

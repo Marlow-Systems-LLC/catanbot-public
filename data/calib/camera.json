@@ -1,0 +1,6 @@
+{
+ "a_n": 0.025169545225913713,
+ "b_n": 0.3754608187856571,
+ "source": "gc_setup1.jpg 1372x888 computer-use frame; window 1280x856pt",
+ "note": "screen pre-warp: w = 1 + a_n*x/W + b_n*y/H"
+}

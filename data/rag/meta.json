@@ -1,0 +1,33 @@
+{
+ "version": 190,
+ "games": 14,
+ "game_keys": [
+  "ea0d211484eeaa65edfbffc91af9144024a4ee1f",
+  "5ffa9bb06d6666eb0f6f1220ef34b92e24298be3",
+  "e7ddd1fe4834c02639efd750c0de16d91baa3765",
+  "2925c72618134f408a69fee366d5f1c75063037e",
+  "dd2a5a0d5776fd567d9838ff2cb7dd96cc7c74d8",
+  "d54f87ad7795cab50058261354a1728fa1d6fc80",
+  "72dd83dd6b5caa7237fddfc0e0b1af8888a3c47a",
+  "346b276cf8dc127be7b474399de0c93aee6b5421",
+  "3a226bc60dd9c826d2cb88c2384c5a890a9a6705",
+  "68299e763a7260927112b713d09d35a2b641f1f6",
+  "e507381a95fbef5f43caf90c6f8a3a1cac074226",
+  "ce7ac67433ab2b038fa399668463cc8a4ff5c92b",
+  "b2acf6e5c8f8b35700935807b1a8649f6f1be190",
+  "7d54a35451c1ccfb2cefcc4366da7a29a453b194"
+ ],
+ "docs": [
+  "canal_playbook.md",
+  "progress_cards.md",
+  "progress_cards_playbook.md",
+  "rules_research.md",
+  "great_canal_rules_research.md",
+  "great_canal_official_rules.md",
+  "strategy_base_sf_ck.md",
+  "strategy_ck_developments.md",
+  "strategy_lessons.md",
+  "strategy_research.md",
+  "strategy_scenarios.md"
+ ]
+}

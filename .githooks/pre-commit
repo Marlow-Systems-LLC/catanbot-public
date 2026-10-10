@@ -1,0 +1,11 @@
+#!/bin/sh
+# Owner 2026-10-06: the RAG must never lag the docs. When a commit touches a doc the RAG reads
+# (catanbot/rag.py DOC_NAMES + docs/strategy_*.md), rebuild the doc chunks (game chunks kept)
+# and put data/rag/ in the same commit. Enabled by: git config core.hooksPath .githooks
+top=$(git rev-parse --show-toplevel) || exit 0
+docs=$(git diff --cached --name-only --diff-filter=ACMRD -- docs/ | grep -E '^docs/(strategy_[^/]*|canal_playbook|progress_cards|progress_cards_playbook|rules_research|great_canal_rules_research|great_canal_official_rules)\.md$')
+[ -z "$docs" ] && exit 0
+py="$top/.venv/bin/python"; [ -x "$py" ] || py=python3
+echo "pre-commit: RAG docs changed ($(echo $docs | tr '\n' ' ')) -> re-ingesting"
+(cd "$top" && "$py" -m catanbot.rag ingest-docs) || { echo "pre-commit: RAG ingest failed; commit stopped" >&2; exit 1; }
+git -C "$top" add data/rag/

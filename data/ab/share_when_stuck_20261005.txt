@@ -1,0 +1,1 @@
+{"flag": "share_when_stuck", "mode": "great_canal", "games": 400, "wins": 109, "win_rate": 0.273, "fair": 0.25, "no_winner": 0, "avg_turns": 99.0}
