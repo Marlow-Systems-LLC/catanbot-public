@@ -866,3 +866,9 @@ how much of the turn is used. The timer is the same every turn of the game. Plan
 others play. After the roll, steal first (robber chase, stealing cards), then plan once with every
 card in hand and spend them in one run of builds. Stop offering trades at about half the timer,
 only build after about 70%, and press End turn before the border closes.
+## Off the solo menu when solo is off (stage 2026-10-10)
+The SOLO: OFFLINE GAMES menu (game cards with Quickplay, a back arrow top left, a home button top
+right) is not a game and not the front page. Invites only arrive on the front page, so with solo
+off press the home button (the back arrow if home does not work) and wait there. If the same click
+keeps looping with nothing changing, stop repeating it: go home out of a game, relaunch the app in
+one.

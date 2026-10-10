@@ -27,7 +27,7 @@ from .rules import IMPROVEMENT_TRACKS, can_afford, discard_limit
 from .rules_reader import parse_rules
 from .state import GameState, Knight, PlayerState, new_hand
 from .vision.layout import REF_H, REF_W, TOP, Layout
-from .vision.screens import FORBIDDEN_BUTTONS, active_seat, classify, find_popup_option, find_text, ocr_near
+from .vision.screens import FORBIDDEN_BUTTONS, active_seat, classify, find_popup_option, find_text, ocr_near, offline_menu
 
 ROOT = Path(__file__).resolve().parent.parent
 UI = json.loads((ROOT / "data" / "calib" / "ui.json").read_text())
@@ -1793,6 +1793,7 @@ class Runner:
         return all(checks)
 
     LOOP_WINDOW_S, LOOP_MAX, LOOP_BLOCK_S = 180, 12, 90
+    LOOP_ESCALATE = 3      # the same click looping this many times: blocking alone is no way out
 
     def _click_loop(self, xy, why) -> bool:
         """Audit 2026-10-03: the worst live losses were one click repeated with nothing changing
@@ -1824,7 +1825,23 @@ class Runner:
             pass
         if self._loops == 3:
             self.alert(f"3 click loops this game (last: {why}); see data/loops", halt=False)
+        # stage 2026-10-10 05:21-14:58: 'open rules info' looped 159 times on a menu, each loop
+        # blocked 90 s and then started again. The same click looping LOOP_ESCALATE times escalates.
+        counts = self.__dict__.setdefault("_loop_counts", {})
+        counts[key] = counts.get(key, 0) + 1
+        if counts[key] % self.cfg.get("loop_escalate", self.LOOP_ESCALATE) == 0:
+            self._loop_escalate(why, counts[key])
         return True
+
+    def _loop_escalate(self, why, n):
+        """Out of a game (or on a menu) the home button is the way out; in a game the app is
+        relaunched (it rejoins the match), the same remedy as a 15-min stall on one screen."""
+        if not getattr(self, "_in_play", False) or offline_menu(getattr(self, "_last_img", None)):
+            self.note(f"LOOP x{n}: '{why}' -- escalating: pressing home")
+            self._go_home(f"loop escalation ({why})", guard=False)
+        else:
+            self.note(f"LOOP x{n}: '{why}' in a game -- escalating: relaunching the app")
+            self.restart_app(f"click loop x{n}: {why}")
 
     def drag(self, p0, p1, why: str):
         self._last_click_at = time.time()
@@ -2052,6 +2069,35 @@ class Runner:
                 denied.add((h.kind, h.edge))
                 gs.board.harbors.remove(h)
                 self.note(f"harbour {h.kind} at {h.edge}: the bank dialog says no ({seen}); dropped for this game")
+
+    OCR_DEAD_NOTE_S = 60
+
+    def _ocr_watch(self, img, ocr) -> None:
+        """Stage 2026-10-10 05:19: Apple Vision went silent in the long-running process (OCR 200 ms
+        -> 22 ms, no lines) for 9.5 h on a menu full of text; the runner restart at 15:09 fixed it.
+        A busy frame with no text for `ocr_dead_reexec_s` re-executes the runner in place: same pid,
+        so start_bot.command's caffeinate and tee carry on (no supervisor would restart an exit)."""
+        if isinstance(self.io, ReplayIO) or img is None:
+            return
+        if ocr or float(img.std()) < 25:              # text read, or a black/loading frame
+            self._ocr_empty_since = None
+            return
+        now = time.time()
+        since = self.__dict__.get("_ocr_empty_since") or now
+        self._ocr_empty_since = since
+        if now - since > self.OCR_DEAD_NOTE_S and not getattr(self, "_ocr_dead_noted", None) == since:
+            self._ocr_dead_noted = since
+            self.note(f"OCR read nothing on a busy frame for {int(now - since)} s (Apple Vision stuck?)")
+        limit = self.cfg.get("ocr_dead_reexec_s", 600)
+        if limit and now - since > limit:
+            self.alert(f"OCR read nothing for {int(now - since)} s: restarting the runner process", halt=False)
+            self._reexec()
+
+    def _reexec(self):
+        import os
+        import sys
+        sys.stdout.flush(); sys.stderr.flush()
+        os.execv(sys.executable, [sys.executable, "-m", "catanbot.runner", *sys.argv[1:]])
 
     def ensure_state(self, img, texts):
         if self.mode is None and not self.read_rules(texts):
@@ -2842,7 +2888,10 @@ class Runner:
         t_ocr = time.perf_counter()
         texts = [o["text"] for o in ocr]
         state, info = classify(texts, self.cfg["bot_name"].lower())
+        if state == "unknown" and offline_menu(img):
+            state = "offline_menu"                    # stage 2026-10-10: read by its pixels when OCR fails
         self._step_state = state
+        self._ocr_watch(img, ocr)
         self._tcount("reads")
         if self.cfg.get("log_timing", True):
             # SPEED_PLAN "measure after": capture vs OCR vs classify had no line of their own
@@ -2868,16 +2917,16 @@ class Runner:
         # wiped the game (half-board rescan, a lost turn, the intro again). In play, a lobby
         # reading must hold for LOBBY_CONFIRM frames before it counts.
         # review 0.3.1: "home" wiped the game on a single frame too -- same confirm streak
-        if state in ("lobby", "home") and getattr(self, "_in_play", False):
+        if state in ("lobby", "home", "offline_menu") and getattr(self, "_in_play", False):
             self._lobby_streak = getattr(self, "_lobby_streak", 0) + 1
             if self._lobby_streak < self.LOBBY_CONFIRM:
                 self.note(f"{state} read mid-game ({self._lobby_streak}/{self.LOBBY_CONFIRM}): waiting to confirm")
                 return f"{state}_unconfirmed"
         else:
             self._lobby_streak = 0
-        if state in ("lobby", "home", "game_over"):
+        if state in ("lobby", "home", "offline_menu", "game_over"):
             self._lobby_streak = 0
-        if state in ("lobby", "home"):
+        if state in ("lobby", "home", "offline_menu"):
             self._reset_game_memory(state)
         blob = " ".join(texts).lower()
         # solo 2026-10-03: the rules panel ("...upon or after the first barbarian attack") set the
@@ -2892,7 +2941,7 @@ class Runner:
                 self._barb_text_note = time.time()
                 self.note(f"attack text with the ship at {self._barb_tracker().pos}/7: not an attack, knights stay")
         self._watch_robbed(img, texts)
-        if getattr(self, "_in_play", False) and state not in ("lobby", "home", "game_over"):
+        if getattr(self, "_in_play", False) and state not in ("lobby", "home", "offline_menu", "game_over"):
             self._watch_dice(img)
         if state in ("unknown", "my_turn", "other_turn", "trade_offer_in"):
             phase = turn_phase(img)
@@ -2906,7 +2955,7 @@ class Runner:
             self._offer_seen_t = time.time()
         elif time.time() - getattr(self, "_offer_seen_t", 0) > 4:
             self._answered = None                     # offer panel gone: the next offer is new
-        if self.cfg.get("solo") and re.search(r"offline games|scenario selection", " ".join(texts), re.I):
+        if self.cfg.get("solo") and (state == "offline_menu" or re.search(r"offline games|scenario selection", " ".join(texts), re.I)):
             state = "home"                            # solo menus: start_solo continues from here
         if self._wildcard_panel(img, ocr):
             return state
@@ -3361,6 +3410,10 @@ class Runner:
         d = ROOT / "data" / "endgame"
         d.mkdir(exist_ok=True)
         p = d / f"{time.strftime('%Y%m%d_%H%M%S')}_{kind}.png"
+        from catanbot import group_share
+        if group_share.mostly_black(img):
+            # stage 2026-10-10 15:10: trimming a black frame left just the macOS toast, which was shared
+            return p
         try:
             cv2.imwrite(str(p), self._trim_black(img))
         except Exception:                    # noqa: BLE001
@@ -3378,10 +3431,33 @@ class Runner:
         btn = find_text(ocr, r"^continue$")
         self.click((btn["x"] + btn["w"] / 2, btn["y"] + btn["h"] / 2) if btn else (1197, 749), "game result: CONTINUE", ocr)
 
+    @classmethod
+    def end_screen_kind(cls, img, texts) -> str | None:
+        """'result' for the "You've won!/lost" banner with VIEW PROGRESS and CONTINUE, 'ranking' for
+        the ranking screen (rank rows + QUIT), else None. Stage 2026-10-10 15:10: after a kill and
+        relaunch, a black frame with the macOS "Game Mode: On ... Game Overlay" toast read as
+        game_over -- recorded, learned and shared to the group as winner=None ranking=[]."""
+        from catanbot import group_share
+        if img is not None and group_share.mostly_black(img):
+            return None
+        low = [t.strip().lower() for t in texts]
+        joined = " | ".join(low)
+        if re.search(r"you.?ve (won|lost)|you (won|lost)", joined) and "view progress" in joined \
+                and "continue" in low:
+            return "result"
+        if "quit" in low and cls.read_ranking(texts):
+            return "ranking"
+        return None
+
     def on_game_over(self, img, ocr, texts, info):
         """Owner 2026-10-02: after a game ends, restart the app via Steam -- otherwise it keeps
         saying we're still in the game. Once per result screen."""
         if isinstance(self.io, ReplayIO) or time.time() - getattr(self, "_restarted_at", 0) < 120:
+            return
+        if self.end_screen_kind(img, texts) is None:
+            if time.time() - getattr(self, "_fake_end_noted", 0) > 30:
+                self._fake_end_noted = time.time()
+                self.note(f"game over: not a real end screen, ignored ({' | '.join(texts[:4]) or 'no text'})")
             return
         cv2.imwrite(str(ROOT / "data" / "popups" / time.strftime("%H%M%S_game_over.png")), img)
         self.save_endgame_shot(img, "game_over")
@@ -3454,7 +3530,8 @@ class Runner:
             vps = [next((p.vp_visible for p in getattr(self.gs, "players", []) if p.name == n), None) for n in ranking]
             group_share.send(group_share.caption_for(res.get("winner"), ranking),
                              shots, url=self.cfg.get("group_send_url", group_share.DEFAULT_URL), note=self.note, wait=True,
-                             idem_key=group_share.game_key(ranking, vps) if ranking else None)
+                             idem_key=group_share.game_key(ranking, vps) if ranking else None,
+                             winner=res.get("winner"), ranking=ranking)
         except Exception as e:                    # noqa: BLE001
             self.note(f"group share skipped: {e}")
         # owner 2026-10-04: no pile of Terminal windows; close idle bot launchers after every game
@@ -3545,7 +3622,7 @@ class Runner:
             ocr = self.io.ocr(img)
             texts = [o["text"] for o in ocr]
             state, _ = classify(texts, self.cfg["bot_name"].lower())
-            if state in ("home", "lobby", "login"):
+            if state in ("home", "lobby", "login", "offline_menu") or state == "unknown" and offline_menu(img):
                 self.note(f"leave game: out ({state})")
                 self._save_leave_frame(img, texts, f"out_{state}")
                 return True
@@ -3677,7 +3754,7 @@ class Runner:
         if state in ("unknown", "login"):
             return False                              # still starting / signing in
         self._relaunch_watch = None
-        if state in ("home", "lobby", "invite"):
+        if state in ("home", "lobby", "invite", "offline_menu"):
             self.note(f"relaunch: {state} -- the old match was not rejoined")
             return False
         self._save_leave_frame(img, texts, "rejoined")
@@ -3741,7 +3818,27 @@ class Runner:
     # -- solo games vs the app's computer players (owner 2026-10-03: "play it single player and test").
     # Frame coordinates read live 2026-10-03 on the server (data/calib/solo_*.png).
     SOLO = {"solo_tab": (59, 745), "play": (1218, 750), "special": (768, 542),
-            "canal": (800, 400), "start": (1186, 760), "back": (60, 76)}
+            "canal": (800, 400), "start": (1186, 760), "back": (60, 76), "home": (1245, 77)}
+    MENU_HOME_EVERY_S = 8
+
+    def on_offline_menu(self, img, ocr, texts, info):
+        """Stage 2026-10-10 03:10-14:58: with solo off the runner sat on SOLO: OFFLINE GAMES for
+        12 h; invites only come on the front page. Press home (every 3rd try the back arrow)."""
+        if self.cfg.get("solo"):
+            return self.on_home(img, ocr, texts, info)
+        if time.time() - getattr(self, "_menu_home_at", 0) < self.MENU_HOME_EVERY_S:
+            return
+        self._go_home("solo off: leave the offline menu, wait for invites")
+
+    def _go_home(self, why, guard=True):
+        self._menu_home_at = time.time()
+        n = self._menu_home_n = getattr(self, "_menu_home_n", 0) + 1
+        way = "back" if n % 3 == 0 else "home"
+        if not guard:                                 # the loop guard's own way out is never loop-blocked
+            self._loop_blocked = {k: t for k, t in self.__dict__.get("_loop_blocked", {}).items()
+                                  if k[0] != f"menu {way} button"}
+        self.click(self.SOLO[way], f"menu {way} button")
+        self.note(f"{why}: pressed {way}")
 
     def on_home(self, img, ocr, texts, info):
         if self._leave_hosted_party(ocr, texts):

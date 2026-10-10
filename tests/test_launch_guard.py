@@ -111,7 +111,7 @@ def test_solo_menu_is_home_and_quickplay_is_not_matchmaking_there():
     from catanbot.vision.screens import classify, FORBIDDEN_BUTTONS
     texts = ["SOLO: OFFLINE GAMES", "THE GAME", "SCENARIO SELECTION", "Quickplay",
              "The First Island", "Continue", "The Great Canal"]
-    assert classify(texts)[0] == "home"
+    assert classify(texts)[0] == "offline_menu"           # 2026-10-10: its own non-game menu
     joined = " ".join(texts)
     assert FORBIDDEN_BUTTONS.search(joined)               # still forbidden elsewhere
     assert not FORBIDDEN_BUTTONS.search(re.sub(r"(?i)quick ?play", "", joined))

@@ -21,6 +21,11 @@ DEFAULT_URL = os.environ.get("CATANBOT_SHARE_URL", "")
 MAX_BYTES = 2 * 1024 * 1024
 MAX_FILES = 4
 RETRY_WAITS = (0, 10, 30)    # seconds before each try
+# stage 2026-10-10 15:10: a black frame with only the macOS "Game Mode: On" toast went to the
+# group. A shot is a game screen only when most of it is not black and it is not a small crop
+BLACK_LEVEL = 24             # max channel at or below this = black
+BLACK_SHARE = 0.85           # more black pixels than this = mostly black
+MIN_W, MIN_H = 400, 300      # the game draws at 1308x790; a trimmed toast is ~240x40
 
 
 def _key() -> str | None:
@@ -29,6 +34,23 @@ def _key() -> str | None:
         return k or None
     except OSError:
         return None
+
+
+def mostly_black(img) -> bool:
+    """True for an empty / unreadable image or one whose pixels are mostly black. img is an
+    array or a path."""
+    if isinstance(img, (str, Path)):
+        img = cv2.imread(str(img))
+    if img is None or getattr(img, "size", 0) == 0:
+        return True
+    g = img.max(axis=2) if img.ndim == 3 else img
+    return float((g <= BLACK_LEVEL).mean()) > BLACK_SHARE
+
+
+def shareable(path: Path) -> bool:
+    """A real end-of-game screenshot: readable, full size, not mostly black."""
+    img = cv2.imread(str(path))
+    return img is not None and img.shape[1] >= MIN_W and img.shape[0] >= MIN_H and not mostly_black(img)
 
 
 def image_part(path: Path) -> tuple[str, bytes, str]:
@@ -76,14 +98,22 @@ def game_key(ranking, vps, when=None) -> str:
 
 
 def send(caption: str, files: list[Path], url: str = DEFAULT_URL, note=print, wait: bool = False,
-         idem_key: str | None = None):
+         idem_key: str | None = None, *, winner: str | None, ranking: list[str] | None):
     """Fire-and-forget POST (a failure never holds up the restart). Returns the thread or None.
     idem_key names the game: a second post of the same game (another runner, a restart on the
-    end screen) carries the same Idempotency-Key, so the server drops it."""
+    end screen) carries the same Idempotency-Key, so the server drops it. winner / ranking are
+    the result read off the end screen: with neither there was no real end screen, nothing goes."""
     key = _key()
-    files = [p for p in files if p.exists()][:MAX_FILES]
     if not url:
         return None
+    if not winner and not ranking:
+        # stage 2026-10-10 15:10: winner=None ranking=[] was a misread black frame, not a game
+        note("group share skipped: no winner and no ranking (not a real end screen)")
+        return None
+    kept = [p for p in files if p.exists()]
+    files = [p for p in kept if shareable(p)][:MAX_FILES]
+    if len(files) < len(kept):
+        note(f"group share: dropped {len(kept) - len(files)} black / cropped shot(s)")
     if not key:
         note(f"group share off: no {KEY_FILE.name} ({len(files)} shot(s) kept in data/endgame)")
         return None

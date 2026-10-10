@@ -11,7 +11,9 @@ PATTERNS = [
     # solo 2026-10-03: the barbarian "Defeat!"/"Victory!" banner is mid-game, not the end screen
     # game 13 18:10: "You've won!" banner (Experience / Ranking, VIEW PROGRESS / CONTINUE) sat 4 min unread
     ("game_result", r"you.?ve (won|lost)|you (won|lost)|^(?=.*experience)(?=.*ranking)(?=.*continue)"),
-    ("game_over", r"experience gained|player statistics|game statistics|has won|wins the game|game over"),
+    # stage 2026-10-10 15:10: the macOS toast "Press ... to open Game Overlay" on a black frame read
+    # as game over -- "game over" must be the whole word
+    ("game_over", r"experience gained|player statistics|game statistics|has won|wins the game|game over\b"),
     ("discard_progress", r"discard ?progress ?card"),   # 5th progress card (live 2026-10-03)
     ("discard", r"discard|choose \d+ cards? to (give|return)|hand over to the robber|resources to hand over|"
                 r"resources? you want to gift|is marrying"),   # live 2026-10-03 game 6: Wedding dialog stalled
@@ -62,7 +64,10 @@ PATTERNS = [
     # live 2026-10-08 19:06/19:14: our own trade offer panel says "Waiting for players" -- read as
     # lobby mid-game it wiped the game twice; never lobby while the Player trade panel is up
     ("lobby", r"^(?!.*player trade)(?!.*choose a player to trade).*(start game|\bnot ready\b|(^|\| )ready($| \|)|waiting for players)"),
-    ("home", r"leaderboards|almanac|guilds|solo:? ?offline games"),   # 21:15 solo menu read as main
+    # stage 2026-10-10 03:10-14:58: the SOLO: OFFLINE GAMES card menu (back arrow + home button)
+    # is not the front page -- invites only show there; with solo off the runner presses home
+    ("offline_menu", r"solo:? ?offline games"),
+    ("home", r"leaderboards|almanac|guilds"),   # 21:15 solo menu read as main
     ("login", r"forgot password|^login\b| login |discord"),   # app restart: it signs in by itself
     ("intro", r"\d+\s*victory points"),
 ]
@@ -104,6 +109,35 @@ def classify(texts: list[str], me: str = "marlow.systems") -> tuple[str, dict]:
             info["player"] = who
         return state, info
     return "unknown", info
+
+
+# ---- the solo menus without OCR (stage 2026-10-10 05:19) ----------------------------------------
+# Apple Vision read nothing (OCR 200 ms -> 22 ms) on the SOLO: OFFLINE GAMES menu for 9.5 h; the
+# pixel-only turn_phase called the orange backdrop "main" and the runner waited for the rules there.
+# The solo menus (card menu and scenario options) draw a dark button with a gold icon in both top
+# corners -- back arrow left, home right -- over a plain orange backdrop above and below the
+# cards. Game frames: <= 0.54 dark, 0 gold and <= 0.45 orange in the same boxes (tests/fixtures,
+# data/calib); the menu: 0.75 / 0.11 / 1.0.
+OFFLINE_BUTTONS = ((30, 64, 94, 88), (1214, 64, 1278, 88))     # back arrow, home (frame px)
+OFFLINE_BACKDROP = ((150, 150, 1200, 270), (150, 620, 1200, 760))
+
+
+def offline_menu(img) -> bool:
+    import numpy as np
+    import cv2
+    if img is None or img.shape[0] < 770 or img.shape[1] < 1280:
+        return False
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    for x0, y0, x1, y1 in OFFLINE_BUTTONS:
+        b = hsv[y0:y1, x0:x1].reshape(-1, 3).astype(int)
+        gold = (b[:, 0] >= 12) & (b[:, 0] <= 30) & (b[:, 1] > 120) & (b[:, 2] > 150)
+        if np.mean(b[:, 2] < 70) < 0.5 or np.mean(gold) < 0.05:
+            return False
+    for x0, y0, x1, y1 in OFFLINE_BACKDROP:
+        b = hsv[y0:y1, x0:x1].reshape(-1, 3).astype(int)
+        if np.mean((b[:, 0] >= 3) & (b[:, 0] <= 30) & (b[:, 1] > 150) & (b[:, 2] > 140)) < 0.8:
+            return False
+    return True
 
 
 # ---- whose turn it is (stage 2026-10-09 00:36:43 / 00:37:20) ----------------------------------

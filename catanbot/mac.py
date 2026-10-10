@@ -201,7 +201,15 @@ def type_text(text: str) -> None:
 
 # ---- OCR (Apple Vision, on-device) --------------------------------------------------
 def ocr(img: np.ndarray, fast: bool = False, min_conf: float = 0.3) -> list[dict]:
-    """Return [{text, x, y, w, h, conf}] in image pixels (top-left origin)."""
+    """Return [{text, x, y, w, h, conf}] in image pixels (top-left origin).
+    stage 2026-10-10 05:19: Vision went silent after ~12 h in one process (UNCONFIRMED cause):
+    each call drains its own autorelease pool, and a failed request is printed, not swallowed."""
+    import objc
+    with objc.autorelease_pool():
+        return _ocr(img, fast, min_conf)
+
+
+def _ocr(img, fast, min_conf):
     import Vision
     from Foundation import NSData
     import cv2
@@ -214,6 +222,8 @@ def ocr(img: np.ndarray, fast: bool = False, min_conf: float = 0.3) -> list[dict
     req.setRecognitionLevel_(1 if fast else 0)
     req.setUsesLanguageCorrection_(False)
     ok, err = handler.performRequests_error_([req], None)
+    if not ok:
+        print(f"OCR: Vision request failed: {err}", flush=True)
     H, W = img.shape[:2]
     out = []
     for r in req.results() or []:
