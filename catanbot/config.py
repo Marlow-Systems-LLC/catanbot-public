@@ -11,6 +11,9 @@ DEFAULTS = {
     # Only invites from these Catan Universe names are accepted (case-insensitive).
     # Empty list = accept nobody (the bot just waits).
     "friends": [],
+    # Local iMessage on this Mac (catanbot/imessage.py): {"chat": "<group name>", "owners":
+    # ["<handle>"]} sends end-of-game shots and takes owner commands. Empty = off.
+    "imessage": {},
     "turn_budget_s": 45,        # finish our own turn within this many seconds
     "trade_wait_s": 12,         # how long to wait for answers to our trade offer
     "max_trade_offers": 3,      # per turn

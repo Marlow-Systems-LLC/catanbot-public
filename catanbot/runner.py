@@ -3531,7 +3531,8 @@ class Runner:
             group_share.send(group_share.caption_for(res.get("winner"), ranking),
                              shots, url=self.cfg.get("group_send_url", group_share.DEFAULT_URL), note=self.note, wait=True,
                              idem_key=group_share.game_key(ranking, vps) if ranking else None,
-                             winner=res.get("winner"), ranking=ranking)
+                             winner=res.get("winner"), ranking=ranking,
+                             imessage_chat=((self.cfg.get("imessage") or {}).get("chat")))
         except Exception as e:                    # noqa: BLE001
             self.note(f"group share skipped: {e}")
         # owner 2026-10-04: no pile of Terminal windows; close idle bot launchers after every game
@@ -8797,6 +8798,8 @@ class Runner:
             if self.cfg.get("owner_commands", True):  # owner 2026-10-05: "marlow, exit the game" by iMessage
                 from . import commands
                 commands.start(self.cfg.get("owner_commands_url", commands.DEFAULT_URL), note=self.note)
+                from . import imessage                # owner 2026-10-10: local iMessage when configured
+                imessage.start(self.cfg, note=self.note)
         while max_steps is None or n < max_steps:
             try:
                 s = self.step()

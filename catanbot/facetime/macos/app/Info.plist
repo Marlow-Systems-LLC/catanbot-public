@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key><string>local.catanbot.facetime</string>
+  <key>CFBundleName</key><string>CatanbotFaceTime</string>
+  <key>CFBundleDisplayName</key><string>Catanbot FaceTime</string>
+  <key>CFBundleExecutable</key><string>catanbot-facetime</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>CFBundleVersion</key><string>1</string>
+  <key>LSMinimumSystemVersion</key><string>14.0</string>
+  <key>LSUIElement</key><true/>
+  <key>NSMicrophoneUsageDescription</key><string>The Catan bot listens to FaceTime calls it has answered (through BlackHole) so it can reply when someone speaks to it. Audio stays in memory and is never recorded.</string>
+</dict>
+</plist>

@@ -1,0 +1,22 @@
+{
+  "source": "Native AX tree of NotificationCenter during a real 1:1 FaceTime Audio ring (macOS 27; caller name anonymised), 2026-10-04. Empty AXGroups without identifier or actions are omitted, as the dumper did. Note the U+202A/U+202C marks around the name and the U+00A0 in 'FaceTime Audio'.",
+  "tree": {
+    "role": "AXWindow", "title": "Notification Center", "children": [
+      {"role": "AXScrollArea", "children": [
+        {"role": "AXGroup", "desc": "FaceTime Notification", "id": "FACETIME_NOTIFICATION", "children": [
+          {"role": "AXGroup", "children": [
+            {"role": "AXGenericElement", "desc": "\u202aAna Pop\u202c, FaceTime\u00a0Audio"},
+            {"role": "AXButton", "desc": "Live Voicemail"},
+            {"role": "AXButton", "desc": "Decline with Message"},
+            {"role": "AXButton", "desc": "Decline"},
+            {"role": "AXButton", "desc": "Answer"},
+            {"role": "AXGroup", "children": [{"role": "AXGroup"}]},
+            {"role": "AXGroup", "children": [{"role": "AXGroup"}]},
+            {"role": "AXGroup", "children": [{"role": "AXGroup"}]}
+          ]}
+        ]}
+      ]},
+      {"role": "AXGroup", "id": "widgets-overlay-view"}
+    ]
+  }
+}

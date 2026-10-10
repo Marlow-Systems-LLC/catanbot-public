@@ -98,13 +98,15 @@ def game_key(ranking, vps, when=None) -> str:
 
 
 def send(caption: str, files: list[Path], url: str = DEFAULT_URL, note=print, wait: bool = False,
-         idem_key: str | None = None, *, winner: str | None, ranking: list[str] | None):
+         idem_key: str | None = None, *, winner: str | None, ranking: list[str] | None,
+         imessage_chat: str | None = None):
     """Fire-and-forget POST (a failure never holds up the restart). Returns the thread or None.
     idem_key names the game: a second post of the same game (another runner, a restart on the
     end screen) carries the same Idempotency-Key, so the server drops it. winner / ranking are
-    the result read off the end screen: with neither there was no real end screen, nothing goes."""
+    the result read off the end screen: with neither there was no real end screen, nothing goes.
+    imessage_chat: also send through this Mac's Messages app (catanbot/imessage.py, if configured)."""
     key = _key()
-    if not url:
+    if not url and not imessage_chat:
         return None
     if not winner and not ranking:
         # stage 2026-10-10 15:10: winner=None ranking=[] was a misread black frame, not a game
@@ -114,6 +116,15 @@ def send(caption: str, files: list[Path], url: str = DEFAULT_URL, note=print, wa
     files = [p for p in kept if shareable(p)][:MAX_FILES]
     if len(files) < len(kept):
         note(f"group share: dropped {len(kept) - len(files)} black / cropped shot(s)")
+    if imessage_chat and files:
+        from catanbot import imessage
+        local = threading.Thread(target=imessage.send, args=(imessage_chat, caption, files),
+                                 kwargs={"note": note}, daemon=True)
+        local.start()
+        if wait:
+            local.join(90)
+    if not url:
+        return None
     if not key:
         note(f"group share off: no {KEY_FILE.name} ({len(files)} shot(s) kept in data/endgame)")
         return None

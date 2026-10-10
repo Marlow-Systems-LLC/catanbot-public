@@ -1,0 +1,3 @@
+# Optional FaceTime voice add-on (docs/facetime.md). macOS only for live calls.
+numpy
+sounddevice>=0.4.6

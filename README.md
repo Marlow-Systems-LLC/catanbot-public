@@ -156,6 +156,28 @@ The keys you're most likely to set:
 | `solo` | `true` starts a game against the computer from the home screen |
 | `dry_run` | Decide moves but never click |
 | `turn_budget_s` | How long its own turn may take |
+| `imessage` | Local iMessage: group chat and owner handles (see below) |
+| `facetime` | Local FaceTime voice: callers, speech and voice settings (see docs/facetime.md) |
+
+### iMessage and FaceTime (optional)
+
+Both are off until you configure them, and both run on the bot's own Mac with no server.
+
+**iMessage.** Sign Messages in to the bot's Apple ID, then add this to `data/config.json`:
+
+```json
+"imessage": {"chat": "Catan night", "owners": ["+15550100"], "name": "marlow"}
+```
+
+- After each game the end screen goes to `chat` (a group chat's name or guid).
+- An owner (a handle in `owners`) can write "marlow leave the game", "marlow score" or
+  "marlow what's the plan" in that chat, or in a direct message. Anyone else is ignored, and the
+  bot's hand is never sent.
+- macOS asks for Automation permission (Messages) on the first send. Reading commands needs
+  **Full Disk Access** for the app you start the bot from, because Messages keeps its messages in
+  `~/Library/Messages/chat.db` (opened read-only).
+
+**FaceTime.** Talk to the bot about the game on a call. Setup is in [docs/facetime.md](docs/facetime.md).
 
 ### Optional read-only API
 

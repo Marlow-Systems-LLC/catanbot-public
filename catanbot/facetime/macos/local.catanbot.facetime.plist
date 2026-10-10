@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Catan bot FaceTime voice add-on. Installed by catanbot/facetime/macos/install.sh as
+     ~/Library/LaunchAgents/local.catanbot.facetime.plist. __DEST__ is replaced at install time.
+     The daemon reads data/config.json ("facetime"); no secret is on this command line. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>local.catanbot.facetime</string>
+  <!-- The app bundle's launcher spawns the repo's .venv python + scripts/facetime_voice.py, so
+       macOS attributes the microphone to local.catanbot.facetime (a bare python is silently denied). -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>__DEST__/CatanbotFaceTime.app/Contents/MacOS/catanbot-facetime</string>
+  </array>
+  <key>AssociatedBundleIdentifiers</key>
+  <array><string>local.catanbot.facetime</string></array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>30</integer>
+  <key>ProcessType</key><string>Interactive</string>
+  <key>StandardOutPath</key><string>__DEST__/facetime.log</string>
+  <key>StandardErrorPath</key><string>__DEST__/facetime.err.log</string>
+</dict>
+</plist>
