@@ -13,3 +13,10 @@ def test_apply_writes_leave_flag(tmp_path):
     (tmp_path / "data").mkdir()
     done = commands.apply([{"id": 7, "command": "leave"}, {"id": 8, "text": "hello"}], note=lambda s: None, root=tmp_path)
     assert done == ["7", "8"] and (tmp_path / "data" / "leave.flag").exists()
+
+
+def test_why_gives_http_status():
+    import urllib.error
+    from catanbot import commands
+    assert commands.why(urllib.error.HTTPError("u", 502, "Bad Gateway", {}, None)) == "HTTP 502"
+    assert commands.why(TimeoutError()) == "TimeoutError"

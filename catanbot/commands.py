@@ -68,18 +68,30 @@ def poll_once(url: str = DEFAULT_URL, note=print) -> int:
     return len(cmds)
 
 
+def why(e: Exception) -> str:
+    """Short failure reason: the HTTP status when there is one (502 = server restarting,
+    401 = wrong key), else the exception type."""
+    code = getattr(e, "code", None)
+    return f"HTTP {code}" if isinstance(code, int) else type(e).__name__
+
+
 def start(url: str = DEFAULT_URL, note=print, every: float = POLL_S) -> threading.Thread:
-    """Background poller; quiet on network errors (logs the first of a run only)."""
+    """Background poller; quiet on network errors (logs the first failure of a run and the
+    recovery, with how long it lasted)."""
     def loop():
-        failing = False
+        since, misses = None, 0
         while True:
             try:
                 poll_once(url, note)
-                failing = False
+                if since is not None:
+                    note(f"owner commands: poll back after {time.time() - since:.0f}s ({misses} failed)")
+                since, misses = None, 0
             except Exception as e:                  # noqa: BLE001 -- keep polling
-                if not failing:
-                    note(f"owner commands: poll failed ({type(e).__name__}); retrying quietly")
-                failing = True
+                if since is None:
+                    since = time.time()
+                    note(f"owner commands: poll failed ({why(e)}) at {time.strftime('%Y-%m-%d %H:%M:%S')}; "
+                         "retrying quietly")
+                misses += 1
             time.sleep(every)
     t = threading.Thread(target=loop, name="owner-commands", daemon=True)
     t.start()
