@@ -419,3 +419,25 @@ def test_leave_mid_game_presses_yes(tmp_path, monkeypatch):
     monkeypatch.setattr(subprocess, "run", lambda *a, **k: pytest.fail(f"no process calls: {a}"))
     assert r.step() == "left"
     assert [w for *_, w in io.clicks] == ["leave game: quit gear", "leave game: YES"]
+
+
+def test_hand_digits_are_one_digit_only(tmp_path, monkeypatch):
+    """Stage 2026-10-10: OCR read a lone 2 next to a card edge as "21"/"24" and the reader learned
+    those glyphs, so a slot showing 2 could come back as 21."""
+    import numpy as np
+    from catanbot import runner as R
+    g = np.zeros((28, 22), np.float32)
+    path = tmp_path / "d.npz"
+    np.savez(path, **{"2_0": g, "21_0": g, "24_0": g})
+    monkeypatch.setattr(R.HandReader, "PATH", path)
+    h = R.HandReader()
+    assert sorted(h.t) == [2]
+    h.add(14, g)
+    h.add(5, g)
+    assert sorted(h.t) == [2, 5]
+    shipped = np.load("data/calib/hand_digits.npz")
+    assert all(int(k.split("_")[0]) <= 9 for k in shipped.files)
+    img = np.full((1080, 1920, 3), 255, np.uint8)
+    for text, want in (("VP 21", None), ("VP 2", 2), ("VP7", 7)):
+        h.ocr_fn = lambda _img, t=text: [{"text": t}]
+        assert h.ocr_digit(img, 900) == want

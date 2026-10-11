@@ -225,7 +225,9 @@ class HandReader:
         if self.PATH.exists():
             d = np.load(self.PATH)
             for k in d.files:
-                self.t[int(k.split("_")[0])] = self.t.get(int(k.split("_")[0]), []) + [d[k]]
+                n = int(k.split("_")[0])
+                if n <= 9:                       # a slot glyph is one digit; 11/14/21/24 were
+                    self.t.setdefault(n, []).append(d[k])  # a digit + card edge mislabelled by OCR
 
     @staticmethod
     def glyph(img, x) -> np.ndarray:
@@ -233,7 +235,8 @@ class HandReader:
         return cv2.resize(g, (22, 28)).astype(np.float32)
 
     def add(self, n: int, g: np.ndarray):
-        self.t.setdefault(n, []).append(g)
+        if 0 <= n <= 9:
+            self.t.setdefault(n, []).append(g)
 
     def save(self):
         np.savez(self.PATH, **{f"{n}_{i}": g for n, gs in self.t.items() for i, g in enumerate(gs)})
@@ -339,8 +342,8 @@ class HandReader:
             nums = [int(d) for t in boxes for d in re.findall(r"\d{2}", t["text"]) if 10 <= int(d) <= 30]
             return max(nums) if nums else None
         for t in boxes:
-            d = re.search(r"VP\s*(\d{1,2})\b", t["text"])
-            if d and int(d.group(1)) <= 30:
+            d = re.search(r"VP\s*(\d)\b", t["text"])   # one-digit slot: "VP 21" is a 2 + card edge
+            if d:
                 return int(d.group(1))
         return None
 
