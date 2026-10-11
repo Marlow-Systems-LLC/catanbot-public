@@ -9,7 +9,8 @@ them (game JSON was {winner, mode: null, log}).
 2. finish(): at game over the log + winner becomes data/train/live_pending/<time>.json.
 3. gate (run detached, niced, after the game): every pending live game is learned on top of
    data/model.json into a candidate; the candidate battles the current model (scripts/battle.py,
-   same seeds, ABAB/BABA). It replaces data/model.json only if it wins MORE than half.
+   same seeds, ABAB/BABA). It replaces data/model.json only if it passes the strategy tests and
+   beats the model by more than 2 standard errors (passes()).
    Every gate, live or sim (train_loop.py), is one row in data/train/stages.jsonl.
 
     python -m catanbot.live_learn gate [GAMES]
@@ -35,7 +36,11 @@ CAND = TRAIN / "live_candidate.json"
 PREV = TRAIN / "model_prev.json"
 LEDGER = TRAIN / "stages.jsonl"
 LOCK = TRAIN / "gate.lock"
-GATE_GAMES = 200
+# Owner 2026-10-10: stage 19 got through at 53% over 200 games (se 0.035) and broke owner rules;
+# 800 head-to-head battles showed it no better. The gate now asks for the owner-rule tests and a 2-se margin.
+GATE_GAMES = 800
+STRATEGY_TESTS = ["tests/test_cards_first.py", "tests/test_city_goal_1010.py", "tests/test_live_bugs_1008.py",
+                  "tests/test_settle_big_hand.py", "tests/test_settle_when_far.py"]
 MAX_SNAPS = 300
 
 
@@ -150,6 +155,21 @@ def battle(games: int, a: Path, b: Path, mode: str) -> dict:
     return json.loads(lines[-1])
 
 
+def passes(share: float, se: float, fair: float = 0.5) -> bool:
+    """Better, not just "not worse": more than 2 standard errors above the fair share."""
+    return share - fair > 2 * se
+
+
+def strategy_ok(cand: Path) -> tuple[bool, str]:
+    """The owner-rule strategy tests, run with the candidate as the model."""
+    root = Path(__file__).resolve().parent.parent
+    out = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", *STRATEGY_TESTS],
+                         cwd=root, capture_output=True, text=True,
+                         env={**os.environ, "PYTHONPATH": str(root), "CATANBOT_MODEL": str(Path(cand).resolve())})
+    tail = (out.stdout.strip().splitlines() or [""])[-1]
+    return out.returncode == 0, tail
+
+
 def promote(cand: Path) -> None:
     if MODEL.exists():
         shutil.copy(MODEL, PREV)
@@ -171,9 +191,13 @@ def gate(games: int = GATE_GAMES) -> dict:
         used, mode, results = build_candidate()
         if not used:
             return {"skipped": "no pending live games"}
+        ok, tests = strategy_ok(CAND)
+        if not ok:                                  # breaks an owner rule: no battle needed
+            return ledger({"source": "live", "mode": mode, "live_games": len(used), "tests": tests,
+                           "promoted": False, "model_games": Model(MODEL).games})
         r = battle(games, CAND, MODEL, mode or "great_canal")
         share = r["A_share"]
-        promoted = share > 0.5                      # better, not just "not worse"
+        promoted = passes(share, r["se"])
         if promoted:
             promote(CAND)
             USED.mkdir(parents=True, exist_ok=True)

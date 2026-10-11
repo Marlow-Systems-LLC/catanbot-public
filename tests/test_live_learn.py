@@ -67,16 +67,32 @@ def test_match_name_prefix_both_ways():
 def test_gate_promotes_only_a_better_candidate(paths, monkeypatch):
     _play_logged_game(paths, monkeypatch)
     before = L.MODEL.read_text()
-    monkeypatch.setattr(L, "battle", lambda *a: {"games": 200, "A_share": 0.5, "se": 0.035})
-    row = L.gate()
+    monkeypatch.setattr(L, "strategy_ok", lambda cand: (True, "39 passed"))
+    monkeypatch.setattr(L, "battle", lambda *a: {"games": 800, "A_share": 0.53, "se": 0.0177})
+    row = L.gate()                                      # stage 19's margin: under 2 se, not promoted
     assert row["promoted"] is False and L.MODEL.read_text() == before
     assert len(L.pending()) == 1                        # kept: learned again with the next game
-    monkeypatch.setattr(L, "battle", lambda *a: {"games": 200, "A_share": 0.56, "se": 0.035})
+    monkeypatch.setattr(L, "battle", lambda *a: {"games": 800, "A_share": 0.56, "se": 0.0177})
     row = L.gate()
     assert row["promoted"] is True and row["stage"] == 2 and row["live_games"] == 1
     assert L.MODEL.read_text() != before and L.PREV.read_text() == before
     assert L.pending() == [] and not L.LOCK.exists()
     assert Model(L.MODEL).games == 1
+
+
+def test_gate_never_promotes_a_candidate_that_breaks_an_owner_rule(paths, monkeypatch):
+    _play_logged_game(paths, monkeypatch)
+    before = L.MODEL.read_text()
+    monkeypatch.setattr(L, "strategy_ok", lambda cand: (False, "5 failed, 34 passed"))
+    monkeypatch.setattr(L, "battle", lambda *a: pytest.fail("no battle for a candidate that fails the tests"))
+    row = L.gate()
+    assert row["promoted"] is False and row["tests"] == "5 failed, 34 passed"
+    assert L.MODEL.read_text() == before and len(L.pending()) == 1
+
+
+def test_passes_needs_two_standard_errors():
+    assert not L.passes(0.53, 0.0177) and L.passes(0.54, 0.0177)
+    assert not L.passes(0.27, 0.0153, 0.25) and L.passes(0.29, 0.0153, 0.25)
 
 
 def test_gate_without_live_games_changes_nothing(paths):

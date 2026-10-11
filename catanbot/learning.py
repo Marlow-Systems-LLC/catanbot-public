@@ -21,7 +21,8 @@ from pathlib import Path
 from .threat import DEFAULT_PARAMS, DEFAULT_WEIGHTS, FEATURES
 
 DATA = Path(__file__).resolve().parent.parent / "data"
-MODEL = DATA / "model.json"
+# CATANBOT_MODEL: a gate runs the strategy tests on its candidate (live_learn.strategy_ok)
+MODEL = Path(os.environ.get("CATANBOT_MODEL") or DATA / "model.json")
 GAMES = DATA / "games"
 
 
