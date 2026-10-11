@@ -20,7 +20,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from . import config
+from . import config, shots
 from .brain import Brain
 from .learning import Model
 from .rules import IMPROVEMENT_TRACKS, can_afford, discard_limit
@@ -1823,7 +1823,7 @@ class Runner:
             img = getattr(self, "_last_img", None)
             if img is not None:
                 d = ROOT / "data" / "loops"; d.mkdir(parents=True, exist_ok=True)
-                cv2.imwrite(str(d / time.strftime("%H%M%S.png")), img)
+                shots.imwrite(str(d / time.strftime("%H%M%S.png")), img)
         except Exception:                            # noqa: BLE001
             pass
         if self._loops == 3:
@@ -1995,7 +1995,7 @@ class Runner:
             led.steal(thief, led.me or "me", victim_est=dict(last))
         try:
             d = Path("data/popups"); d.mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(str(d / f"{time.strftime('%H%M%S')}_robbed.png"), img)
+            shots.imwrite(str(d / f"{time.strftime('%H%M%S')}_robbed.png"), img)
         except Exception:                           # noqa: BLE001 -- a debug frame must never stop play
             pass
 
@@ -2472,7 +2472,7 @@ class Runner:
         self.note("SCAN " + s.summary())
         if s.ok and not self._game_file("scan.json").exists():
             self._game_save("scan.json", s.to_json())    # first clean scan of the game, never overwritten
-            cv2.imwrite(str(self._game_file("scan.png")), img)
+            shots.imwrite(str(self._game_file("scan.png")), img)
         if s.ok:
             self.lattice, self.tok_scale = s.lattice, s.token_scale
         return s.ok
@@ -3044,7 +3044,7 @@ class Runner:
 
             def _unread(stamp=stamp, frame=frame, lines=lines, st=state):
                 d = ROOT / "data" / "unread"; d.mkdir(exist_ok=True)
-                cv2.imwrite(str(d / f"{stamp}_{st}.png"), frame)
+                shots.imwrite(str(d / f"{stamp}_{st}.png"), frame)
                 (d / f"{stamp}_{st}.txt").write_text(lines)
             try:
                 if self.cfg.get("probe_async", True) and hasattr(self.probe, "call_async"):
@@ -3418,7 +3418,7 @@ class Runner:
             # stage 2026-10-10 15:10: trimming a black frame left just the macOS toast, which was shared
             return p
         try:
-            cv2.imwrite(str(p), self._trim_black(img))
+            shots.imwrite(str(p), self._trim_black(img))
         except Exception:                    # noqa: BLE001
             pass
         return p
@@ -3462,7 +3462,7 @@ class Runner:
                 self._fake_end_noted = time.time()
                 self.note(f"game over: not a real end screen, ignored ({' | '.join(texts[:4]) or 'no text'})")
             return
-        cv2.imwrite(str(ROOT / "data" / "popups" / time.strftime("%H%M%S_game_over.png")), img)
+        shots.imwrite(str(ROOT / "data" / "popups" / time.strftime("%H%M%S_game_over.png")), img)
         self.save_endgame_shot(img, "game_over")
         if self._game_over_seen(texts):
             # solo 2026-10-05 23:27: a runner restarted on the end screen counted the game again,
@@ -3801,7 +3801,7 @@ class Runner:
         try:
             d = ROOT / "data" / "leave"; d.mkdir(parents=True, exist_ok=True)
             stem = d / time.strftime(f"%Y%m%d_%H%M%S_{kind}")
-            cv2.imwrite(str(stem) + ".png", img)
+            shots.imwrite(str(stem) + ".png", img)
             Path(str(stem) + ".txt").write_text("\n".join(texts))
             for old in sorted(d.glob("*.png"))[:-40]:
                 old.unlink(missing_ok=True); old.with_suffix(".txt").unlink(missing_ok=True)
@@ -3816,7 +3816,7 @@ class Runner:
         self._lobby_saved = time.time()
         d = ROOT / "data" / "lobby"; d.mkdir(parents=True, exist_ok=True)
         stem = d / time.strftime(f"%Y%m%d_%H%M%S_{kind}")
-        cv2.imwrite(str(stem) + ".png", img)
+        shots.imwrite(str(stem) + ".png", img)
         (Path(str(stem) + ".txt")).write_text("\n".join(texts))
 
     # -- solo games vs the app's computer players (owner 2026-10-03: "play it single player and test").
@@ -3945,7 +3945,7 @@ class Runner:
             self.note("solo: Great Canal panel not confirmed (no 'Victory Points: 18')")
             return False
         img, ocr = self._bots_to_veteran(img, ocr)
-        cv2.imwrite(str(ROOT / "data" / "popups" / time.strftime("%H%M%S_solo_setup.png")), img)
+        shots.imwrite(str(ROOT / "data" / "popups" / time.strftime("%H%M%S_solo_setup.png")), img)
         self.click(S["start"], "solo: Start game")
         self._solo_games = getattr(self, "_solo_games", 0) + 1
         self.note(f"solo: game {self._solo_games} started (The Great Canal vs the computer)")
@@ -4522,7 +4522,7 @@ class Runner:
         label if OCR finds one, else leave the pick to the game."""
         d = Path(getattr(self, "popup_dir", None) or ROOT / "data" / "popups")
         d.mkdir(parents=True, exist_ok=True)
-        cv2.imwrite(str(d / f"{time.strftime('%H%M%S')}_choose_resource.png"), img)
+        shots.imwrite(str(d / f"{time.strftime('%H%M%S')}_choose_resource.png"), img)
         gs = getattr(self, "gs", None)
         try:
             want = self.brain.choose_resource(gs, 1)[0] if gs is not None else "grain"
@@ -4794,7 +4794,7 @@ class Runner:
         (UNCONFIRMED flow; frames saved to data/discard/ to calibrate)."""
         key = int(time.time() // 15)
         d = ROOT / "data" / "discard"; d.mkdir(exist_ok=True)
-        cv2.imwrite(str(d / f"{time.strftime('%H%M%S')}_in.png"), img)
+        shots.imwrite(str(d / f"{time.strftime('%H%M%S')}_in.png"), img)
         if getattr(self, "_discarded", None) == key:
             return
         m0 = re.search(r"(\d+)\s*(?:more\s*)?(?:resource|card|commodit)", " ".join(texts).lower())
@@ -4847,7 +4847,7 @@ class Runner:
         after = self.io.snapshot()
         try:                                         # review 0.3.1: a None frame raised before the confirm
             if after is not None:
-                cv2.imwrite(str(d / f"{time.strftime('%H%M%S')}_after.png"), after)
+                shots.imwrite(str(d / f"{time.strftime('%H%M%S')}_after.png"), after)
         except Exception:                            # noqa: BLE001
             pass
         self.click(UI["trade_ok"], "confirm discard (check mark)")
@@ -5024,7 +5024,7 @@ class Runner:
             if int(waited) % 3 == 0:
                 try:
                     d = ROOT / "data" / "trade_wait"; d.mkdir(exist_ok=True)
-                    cv2.imwrite(str(d / f"{time.strftime('%H%M%S')}.png"), img)
+                    shots.imwrite(str(d / f"{time.strftime('%H%M%S')}.png"), img)
                 except Exception:                    # noqa: BLE001
                     pass
             return
@@ -5445,7 +5445,7 @@ class Runner:
                 return
             ocr = self.io.ocr(img)
             try:
-                cv2.imwrite(str(ROOT / "data" / "popups" / f"{time.strftime('%H%M%S')}_improve{step}.png"), img)
+                shots.imwrite(str(ROOT / "data" / "popups" / f"{time.strftime('%H%M%S')}_improve{step}.png"), img)
             except Exception:                            # noqa: BLE001
                 pass
             self.note(f"improve popup texts: {[o['text'] for o in ocr][:20]}")
@@ -5612,7 +5612,7 @@ class Runner:
             return False
         ocr = self.io.ocr(img)
         try:
-            cv2.imwrite(str(ROOT / "data" / "popups" / f"{time.strftime('%H%M%S')}_improve_chart.png"), img)
+            shots.imwrite(str(ROOT / "data" / "popups" / f"{time.strftime('%H%M%S')}_improve_chart.png"), img)
         except Exception:                                # noqa: BLE001
             pass
         self.note(f"improve chart texts: {[o['text'] for o in ocr][:20]}")
@@ -5913,7 +5913,7 @@ class Runner:
         stamp = time.strftime('%H%M%S')
         try:
             d.mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(str(d / f"{stamp}_move_knight.png"), img)
+            shots.imwrite(str(d / f"{stamp}_move_knight.png"), img)
         except Exception:                            # noqa: BLE001
             pass
         from .vision.screens import label_under
@@ -5942,7 +5942,7 @@ class Runner:
         time.sleep(0.8)
         img = self.io.snapshot()
         try:
-            cv2.imwrite(str(d / f"{stamp}_move_knight_pick.png"), img)
+            shots.imwrite(str(d / f"{stamp}_move_knight_pick.png"), img)
         except Exception:                            # noqa: BLE001
             pass
         self.click(lat.vertex_px(dst), f"move knight to {dst}")
@@ -5951,7 +5951,7 @@ class Runner:
         if img is None:
             return False
         try:
-            cv2.imwrite(str(d / f"{stamp}_move_knight_after.png"), img)
+            shots.imwrite(str(d / f"{stamp}_move_knight_after.png"), img)
         except Exception:                            # noqa: BLE001
             pass
         if find_text(self.io.ocr(img), r"confirm"):
@@ -5999,7 +5999,7 @@ class Runner:
         def shot(name, im):
             try:
                 d.mkdir(parents=True, exist_ok=True)
-                cv2.imwrite(str(d / f"{stamp}_{name}.png"), im)
+                shots.imwrite(str(d / f"{stamp}_{name}.png"), im)
             except Exception:                        # noqa: BLE001
                 pass
         shot("move_ship", img)
@@ -6152,7 +6152,7 @@ class Runner:
         stamp = time.strftime('%H%M%S')
         try:
             d.mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(str(d / f"{stamp}_chase.png"), img)
+            shots.imwrite(str(d / f"{stamp}_chase.png"), img)
         except Exception:                            # noqa: BLE001
             pass
         from .vision.screens import label_under
@@ -6183,7 +6183,7 @@ class Runner:
         time.sleep(0.8)
         img = self.io.snapshot()
         try:
-            cv2.imwrite(str(d / f"{stamp}_chase_after.png"), img)
+            shots.imwrite(str(d / f"{stamp}_chase_after.png"), img)
         except Exception:                            # noqa: BLE001
             pass
         # the knight acted: inactive until activated again (grain)
@@ -6277,7 +6277,7 @@ class Runner:
         ocr = self.io.ocr(img)
         try:
             d = ROOT / "data" / "popups"; d.mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(str(d / f"{time.strftime('%H%M%S')}_{a.kind}.png"), img)
+            shots.imwrite(str(d / f"{time.strftime('%H%M%S')}_{a.kind}.png"), img)
         except Exception:
             pass
         self.note(f"popup texts: {[o['text'] for o in ocr if abs(o['y'] - xy[1]) < 260][:14]}")
@@ -6408,7 +6408,7 @@ class Runner:
         if img is None:
             return False
         try:
-            cv2.imwrite(str(ROOT / "data" / "popups" / f"{time.strftime('%H%M%S')}_{a.kind}_after.png"), img)
+            shots.imwrite(str(ROOT / "data" / "popups" / f"{time.strftime('%H%M%S')}_{a.kind}_after.png"), img)
         except Exception:                            # noqa: BLE001
             pass
         if find_text(self.io.ocr(img), r"confirm"):
@@ -6471,7 +6471,7 @@ class Runner:
             return
         try:
             d = ROOT / "data" / "popups"; d.mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(str(d / f"{time.strftime('%H%M%S')}_progress_{tag}.png"), img)
+            shots.imwrite(str(d / f"{time.strftime('%H%M%S')}_progress_{tag}.png"), img)
         except Exception:                            # noqa: BLE001
             pass
 
@@ -6939,7 +6939,7 @@ class Runner:
             try:
                 d = Path(getattr(self, "popup_dir", None) or ROOT / "data" / "popups")
                 d.mkdir(parents=True, exist_ok=True)
-                cv2.imwrite(str(d / f"{time.strftime('%H%M%S')}_progress_{phase}_{key}_{card}.png"), img)
+                shots.imwrite(str(d / f"{time.strftime('%H%M%S')}_progress_{phase}_{key}_{card}.png"), img)
             except Exception:                   # noqa: BLE001
                 pass
             box = next((o for k, o in held if k == card), None)
@@ -8086,7 +8086,7 @@ class Runner:
             self.note(f"offer answers so far {resp}")
             try:
                 d = ROOT / "data" / "trade_wait"; d.mkdir(exist_ok=True)
-                cv2.imwrite(str(d / f"{time.strftime('%H%M%S')}_wait.png"), img)
+                shots.imwrite(str(d / f"{time.strftime('%H%M%S')}_wait.png"), img)
             except Exception:                        # noqa: BLE001
                 pass
         if "accept" in states:
@@ -8124,7 +8124,7 @@ class Runner:
             snap = self.io.snapshot()
             try:
                 d = ROOT / "data" / "trade_wait"; d.mkdir(exist_ok=True)
-                cv2.imwrite(str(d / f"{time.strftime('%H%M%S')}_took.png"), snap)
+                shots.imwrite(str(d / f"{time.strftime('%H%M%S')}_took.png"), snap)
             except Exception:                        # noqa: BLE001
                 pass
             # live 2026-10-02: clicking their check opens "Do you want to accept the offer of
@@ -8287,7 +8287,7 @@ class Runner:
         ok = self._counter_ok(gs, partner, give, get)
         try:
             d = ROOT / "data" / "offers"; d.mkdir(exist_ok=True)
-            cv2.imwrite(str(d / f"{time.strftime('%H%M%S')}_counter_in.png"), img)
+            shots.imwrite(str(d / f"{time.strftime('%H%M%S')}_counter_in.png"), img)
         except Exception:                            # noqa: BLE001
             pass
         self.note(f"counter offer from {partner or '?'}: give {give} get {get}: {'ACCEPT' if ok else 'decline'} "
@@ -8356,7 +8356,7 @@ class Runner:
             self.note("wildcard panel: red X not seen, clicking its usual spot")
         try:
             d = ROOT / "data" / "offers"; d.mkdir(exist_ok=True)
-            cv2.imwrite(str(d / f"{time.strftime('%H%M%S')}_wildcard_panel.png"), img)
+            shots.imwrite(str(d / f"{time.strftime('%H%M%S')}_wildcard_panel.png"), img)
         except Exception:                            # noqa: BLE001
             pass
         self.click(b, "decline wildcard panel")
@@ -8463,7 +8463,7 @@ class Runner:
             return                                   # panel misread would toggle a given answer
         try:
             d = ROOT / "data" / "offers"; d.mkdir(exist_ok=True)
-            cv2.imwrite(str(d / f"{time.strftime('%H%M%S')}_{partner}.png"), img[int(LAY.y(420, "c")):int(LAY.y(620, "c")), int(LAY.x(1000, "r")):int(LAY.x(1230, "r"))])
+            shots.imwrite(str(d / f"{time.strftime('%H%M%S')}_{partner}.png"), img[int(LAY.y(420, "c")):int(LAY.y(620, "c")), int(LAY.x(1000, "r")):int(LAY.x(1230, "r"))])
         except Exception:                            # noqa: BLE001
             pass
         gs = self.ensure_state(img, texts) or self.gs     # fresh hand: a stale one declined a fair 1:1
@@ -8507,7 +8507,7 @@ class Runner:
                 self._click_offer("counter", "counter wildcard", img)
                 time.sleep(0.8)
                 try:
-                    cv2.imwrite(str(ROOT / "data" / "offers" / f"{time.strftime('%H%M%S')}_counter.png"), self.io.snapshot())
+                    shots.imwrite(str(ROOT / "data" / "offers" / f"{time.strftime('%H%M%S')}_counter.png"), self.io.snapshot())
                 except Exception:                    # noqa: BLE001
                     pass
                 for _ in range(n):           # 2 clicks = 2 cards (UNCONFIRMED in the panel)
@@ -8594,6 +8594,11 @@ class Runner:
         d = getattr(self, "_game_dir", None)
         if d is None:
             d = self._game_dir = ROOT / "data" / "games" / time.strftime("%Y%m%d_%H%M%S")
+            if not isinstance(self.io, ReplayIO):
+                # owner 2026-10-11: repeat screenshots are kept for the game being played only
+                n = shots.new_game()
+                if n:
+                    self.note(f"shots: new game, deleted {n} repeat screenshot file(s) of the last game")
         return d / name
 
     def _feed(self, status, result=None):

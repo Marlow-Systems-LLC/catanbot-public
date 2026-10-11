@@ -66,6 +66,15 @@ def _private_game_flags(tmp_path, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _private_shots(tmp_path, monkeypatch):
+    """Tests must never prune or index the live bot's screenshots (catanbot/shots.py)."""
+    from catanbot import shots
+    monkeypatch.setattr(shots, "DATA", tmp_path / "shots_data")
+    monkeypatch.setattr(shots, "INDEX", tmp_path / "shots_data" / "shots.json")
+    monkeypatch.setattr(shots, "_cache", None)
+
+
+@pytest.fixture(autouse=True)
 def _private_stop_file(tmp_path, monkeypatch):
     """The server keeps data/STOP while it only trains; the runner tests must not see it."""
     from catanbot import runner

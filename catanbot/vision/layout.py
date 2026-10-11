@@ -23,6 +23,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from catanbot import shots
+
 ROOT = Path(__file__).resolve().parents[2]
 REF_W, REF_H = 1280 * 1372 / 1440, 828 * 1372 / 1440     # laptop game content inside the frame
 TOP = 54                                                   # content top in the frame
@@ -309,6 +311,6 @@ def save(img, s: Scan, ui: dict | None = None, d: Path | None = None) -> Path:
     if ui:
         mark_buttons(out, ui)
     p = d / "scan_annotated.png"
-    cv2.imwrite(str(p), out)
+    shots.imwrite(str(p), out)
     (d / "scan.json").write_text(json.dumps(s.to_json(), indent=1))
     return p

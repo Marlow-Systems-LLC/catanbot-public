@@ -13,7 +13,7 @@ import threading
 import time
 from pathlib import Path
 
-import cv2
+from catanbot import shots
 
 
 class Probe:
@@ -93,9 +93,9 @@ class Probe:
         try:
             self.dir.mkdir(parents=True, exist_ok=True)
             stem = self.dir / f"{time.strftime('%H%M%S')}_{self.n:03d}_{kind}"
-            cv2.imwrite(str(stem) + ".png", img)
+            shots.imwrite(str(stem) + ".png", img)
             if native is not None and native is not img:
-                cv2.imwrite(str(stem) + "_native.png", native)
+                shots.imwrite(str(stem) + "_native.png", native)
             j = {"kind": kind, "t": time.strftime("%Y-%m-%d %H:%M:%S"), "game": self.game}
             if note:
                 j["note"] = note
