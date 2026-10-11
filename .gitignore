@@ -19,6 +19,7 @@ data/games/
 data/archive/
 data/STOP
 data/*.flag
+data/game_flags.json
 data/ALERT*
 data/api.log
 data/feed.json
