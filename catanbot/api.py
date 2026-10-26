@@ -63,6 +63,20 @@ def _games() -> list[dict]:
     return out
 
 
+def _game_file(gid: str) -> Path | None:
+    # Resolve against the fixed games directory and refuse anything that lands outside it
+    # (a symlinked live_*.json pointing elsewhere included).
+    base = (DATA / "games").resolve()
+    for p in base.glob("live_*.json"):
+        if p.stem != gid:
+            continue
+        real = p.resolve()
+        if real.parent == base and real.is_relative_to(base) and real.is_file():
+            return real
+        return None
+    return None
+
+
 def _ver() -> dict:
     """owner 2026-10-09: marlow says what version it runs (commit '' off a git checkout)."""
     import catanbot
@@ -89,8 +103,10 @@ def route(path: str, query: dict) -> tuple[int, object]:
         return 200, _games()
     if path.startswith("/games/"):
         gid = path.split("/", 2)[2]
-        p = DATA / "games" / f"{gid}.json"
-        if not GAME_ID.match(gid) or not p.exists():
+        # The file path comes from the games directory listing, never from the URL:
+        # the id only selects one of the files that are already there.
+        p = _game_file(gid) if GAME_ID.fullmatch(gid) else None
+        if p is None:
             return 404, {"error": "no such game"}
         g = json.loads(p.read_text())
         log = [ln for ln in g.get("log", []) if not SECRET_WORDS.search(ln)]

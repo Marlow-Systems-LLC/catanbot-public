@@ -301,3 +301,29 @@ def test_live_tail_drops_the_hand(tmp_path, monkeypatch):
     code, body = api.route("/live", {})
     assert code == 200 and body["tail"][0].endswith("me: cities=1 knights=0")
     assert "hand" not in json.dumps(body["tail"])
+
+
+def test_api_game_route_refuses_a_game_file_that_escapes_the_games_dir(tmp_path, monkeypatch):
+    from catanbot import api
+    monkeypatch.setattr(api, "DATA", tmp_path / "data")
+    (tmp_path / "data" / "games").mkdir(parents=True)
+    outside = tmp_path / "outside.json"
+    outside.write_text(json.dumps({"winner": "x", "log": ["leak"]}))
+    gid = "live_20261010_130000"
+    (tmp_path / "data" / "games" / f"{gid}.json").symlink_to(outside)
+    assert api.route(f"/games/{gid}", {})[0] == 404
+
+
+def test_api_game_route_serves_only_listed_game_files(tmp_path, monkeypatch):
+    from catanbot import api
+    monkeypatch.setattr(api, "DATA", tmp_path)
+    (tmp_path / "games").mkdir()
+    gid = "live_20261010_120000"
+    (tmp_path / "games" / f"{gid}.json").write_text(json.dumps({"winner": "me", "mode": "4p", "log": ["ok"]}))
+    (tmp_path / "secret.json").write_text(json.dumps({"winner": "x"}))
+    code, body = api.route(f"/games/{gid}", {})
+    assert code == 200 and body["winner"] == "me" and body["log"] == ["ok"]
+    absolute = str(tmp_path / "secret")
+    for bad in ("live_20261010_120001", "../secret", absolute, "live_20261010_120000\n",
+                "live_20261010_120000/../../secret"):
+        assert api.route(f"/games/{bad}", {})[0] == 404, bad
